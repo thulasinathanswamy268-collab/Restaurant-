@@ -1,0 +1,22 @@
+/* Custom styles for Delight Restaurant */
+body {
+  font-family: 'Inter', system_ui, sans-serif;
+}
+
+.menu-card {
+  transition: all 0.3s ease;
+}
+
+.menu-card:hover {
+  transform: translateY(-8px);
+}
+
+.category-btn {
+  transition: all 0.2s;
+}
+
+.category-btn.active {
+  background-color: #10b981;
+  color: white;
+  font-weight: 600;
+}
