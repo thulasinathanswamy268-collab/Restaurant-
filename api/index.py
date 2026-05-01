@@ -1,4 +1,8 @@
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+
 from app import app
 
-# Vercel expects the Flask app to be exported as 'app'
-# This allows Vercel to run the Flask app as a serverless function
+# Required for Vercel
+handler = app
