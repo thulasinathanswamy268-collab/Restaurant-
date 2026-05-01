@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Delight Restaurant • Menu</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="/css/style.css">
+  <!-- ✅ FIX 1: Use url_for for static CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   <style>
     .menu-card {
       transition: all 0.3s ease;
@@ -18,8 +19,366 @@
       max-height: 420px;
     }
   </style>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- ══ DELIGHT RESTAURANT — ULTIMATE 3D CINEMATIC ENGINE ══ -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <style>
+    /* ── 3D Canvas Layers ── */
+    #delight-canvas-3d {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 0;
+      pointer-events: none;
+    }
+    #delight-particles {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 1;
+      pointer-events: none;
+      opacity: 0.5;
+    }
+    #delight-spices {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 2;
+      pointer-events: none;
+      opacity: 0.3;
+    }
+
+    /* ── Ensure content above canvases ── */
+    .max-w-6xl, header, .fixed, #chat-window {
+      position: relative;
+      z-index: 10;
+    }
+
+    /* ── Cinematic Loading Screen ── */
+    .delight-loader {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(135deg, #0a0f0a, #1a2e1a);
+      z-index: 100000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      perspective: 1000px;
+    }
+    .delight-loader-plate {
+      width: 100px; height: 100px;
+      border-radius: 50%;
+      border: 3px solid rgba(16, 185, 129, 0.4);
+      border-top-color: #10b981;
+      animation: plateSpin 1.5s linear infinite;
+      box-shadow: 0 0 40px rgba(16, 185, 129, 0.3);
+      position: relative;
+    }
+    .delight-loader-plate::before {
+      content: '🍛';
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 40px;
+      animation: foodBounce 1s ease-in-out infinite;
+    }
+    @keyframes plateSpin {
+      to { transform: rotate(360deg); }
+    }
+    @keyframes foodBounce {
+      0%, 100% { transform: translate(-50%, -50%) scale(1); }
+      50% { transform: translate(-50%, -50%) scale(1.2); }
+    }
+    .delight-loader-text {
+      margin-top: 30px;
+      font-family: 'Segoe UI', sans-serif;
+      font-size: 14px;
+      letter-spacing: 0.3em;
+      color: #10b981;
+      text-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
+      animation: textPulse 2s ease-in-out infinite;
+    }
+    @keyframes textPulse {
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 1; }
+    }
+    .delight-loader-bar {
+      width: 180px;
+      height: 3px;
+      background: rgba(16, 185, 129, 0.1);
+      margin-top: 20px;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .delight-loader-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #10b981, #34d399, #10b981);
+      box-shadow: 0 0 15px rgba(16, 185, 129, 0.6);
+      animation: fillBar 2.5s ease-out forwards;
+    }
+    @keyframes fillBar {
+      0% { width: 0%; }
+      100% { width: 100%; }
+    }
+
+    /* ── Custom Cursor ── */
+    .delight-cursor {
+      width: 10px; height: 10px;
+      background: #10b981;
+      border-radius: 50%;
+      position: fixed;
+      pointer-events: none;
+      z-index: 999999;
+      box-shadow: 0 0 20px #10b981, 0 0 40px rgba(16, 185, 129, 0.4);
+      transition: transform 0.1s, background 0.3s;
+    }
+    .delight-cursor-ring {
+      width: 35px; height: 35px;
+      border: 2px solid rgba(16, 185, 129, 0.4);
+      border-radius: 50%;
+      position: fixed;
+      pointer-events: none;
+      z-index: 999998;
+      transition: transform 0.15s, border-color 0.3s;
+    }
+    .delight-cursor-outer {
+      width: 60px; height: 60px;
+      border: 1px dashed rgba(16, 185, 129, 0.2);
+      border-radius: 50%;
+      position: fixed;
+      pointer-events: none;
+      z-index: 999997;
+      transition: transform 0.2s;
+      animation: cursorSpin 8s linear infinite;
+    }
+    @keyframes cursorSpin {
+      to { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+
+    /* ── Vignette & Overlays ── */
+    .delight-vignette {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 3;
+      background: radial-gradient(ellipse at center, transparent 40%, rgba(10, 15, 10, 0.6) 100%);
+    }
+    .delight-scanline {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 4;
+      overflow: hidden;
+    }
+    .delight-scanline::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 3px;
+      background: linear-gradient(180deg, transparent, rgba(16, 185, 129, 0.08), transparent);
+      animation: scanMove 6s linear infinite;
+    }
+    @keyframes scanMove {
+      0% { transform: translateY(-100%); }
+      100% { transform: translateY(100vh); }
+    }
+
+    /* ── 3D Card Effects ── */
+    .menu-card, .p-4.border {
+      transform-style: preserve-3d;
+      transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+      position: relative;
+    }
+    .menu-card::before, .p-4.border::before {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      border-radius: inherit;
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.3), transparent 40%, transparent 60%, rgba(245, 158, 11, 0.3));
+      z-index: -1;
+      opacity: 0;
+      transition: opacity 0.4s;
+      filter: blur(12px);
+    }
+    .menu-card:hover::before, .p-4.border:hover::before {
+      opacity: 1;
+    }
+    .menu-card:hover, .p-4.border:hover {
+      transform: perspective(1000px) rotateX(2deg) rotateY(-2deg) translateZ(30px) translateY(-8px);
+      box-shadow: 0 25px 50px rgba(0,0,0,0.15), 0 0 30px rgba(16, 185, 129, 0.1);
+    }
+
+    /* ── 3D Button Effects ── */
+    button, .bg-emerald-600 {
+      transform-style: preserve-3d;
+      transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    button::before, .bg-emerald-600::before {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%;
+      width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      transition: left 0.6s;
+    }
+    button:hover::before, .bg-emerald-600:hover::before {
+      left: 100%;
+    }
+    button:hover, .bg-emerald-600:hover {
+      transform: translateY(-3px) translateZ(15px);
+      box-shadow: 0 15px 35px rgba(16, 185, 129, 0.3), 0 0 20px rgba(16, 185, 129, 0.2);
+    }
+    button:active, .bg-emerald-600:active {
+      transform: translateY(1px) translateZ(5px);
+    }
+
+    /* ── 3D Chat Window ── */
+    #chat-window {
+      transform-style: preserve-3d;
+      transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+    #chat-window:not(.hidden) {
+      animation: chatAppear 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+    @keyframes chatAppear {
+      from { opacity: 0; transform: translateY(40px) translateZ(-50px) scale(0.9); }
+      to { opacity: 1; transform: translateY(0) translateZ(0) scale(1); }
+    }
+
+    /* ── 3D Header ── */
+    header {
+      transform-style: preserve-3d;
+    }
+    header h1 {
+      background: linear-gradient(135deg, #047857, #10b981, #f59e0b, #047857);
+      background-size: 300% 300%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: gradientFlow 4s ease infinite;
+    }
+    @keyframes gradientFlow {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+
+    /* ── 3D Search Input ── */
+    #search-input {
+      transform-style: preserve-3d;
+      transition: all 0.4s;
+    }
+    #search-input:focus {
+      transform: translateZ(20px) scale(1.01);
+      box-shadow: 0 15px 40px rgba(16, 185, 129, 0.15), 0 0 0 2px rgba(16, 185, 129, 0.3);
+    }
+
+    /* ── 3D Cart Modal ── */
+    #cart-modal > div {
+      transform-style: preserve-3d;
+      animation: modalAppear 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+    @keyframes modalAppear {
+      from { opacity: 0; transform: perspective(1000px) rotateX(10deg) translateZ(-100px) scale(0.9); }
+      to { opacity: 1; transform: perspective(1000px) rotateX(0) translateZ(0) scale(1); }
+    }
+
+    /* ── Category Buttons 3D ── */
+    #categories button {
+      transform-style: preserve-3d;
+      transition: all 0.3s;
+    }
+    #categories button:hover {
+      transform: translateY(-3px) translateZ(15px);
+      box-shadow: 0 10px 25px rgba(16, 185, 129, 0.2);
+    }
+
+    /* ── Floating Food Emoji Animation ── */
+    @keyframes foodFloat {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-15px) rotate(5deg); }
+    }
+    .food-emoji {
+      animation: foodFloat 4s ease-in-out infinite;
+      filter: drop-shadow(0 10px 20px rgba(0,0,0,0.1));
+    }
+
+    /* ── Steam Effect ── */
+    @keyframes steam {
+      0% { transform: translateY(0) scale(1); opacity: 0.6; }
+      100% { transform: translateY(-60px) scale(2); opacity: 0; }
+    }
+    .steam-particle {
+      position: absolute;
+      width: 8px; height: 8px;
+      background: radial-gradient(circle, rgba(255,255,255,0.4), transparent);
+      border-radius: 50%;
+      animation: steam 3s ease-out infinite;
+    }
+
+    /* ── Glowing Border for Active Elements ── */
+    .glow-emerald {
+      box-shadow: 0 0 20px rgba(16, 185, 129, 0.3), inset 0 0 20px rgba(16, 185, 129, 0.05);
+    }
+
+    /* ── Scrollbar 3D ── */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: rgba(16, 185, 129, 0.05); }
+    ::-webkit-scrollbar-thumb {
+      background: linear-gradient(180deg, #10b981, #059669);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(180deg, #34d399, #10b981);
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+    }
+
+    /* ── Ambient Light Glow ── */
+    .ambient-glow {
+      position: fixed;
+      width: 500px; height: 500px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(16, 185, 129, 0.08), transparent 70%);
+      pointer-events: none;
+      z-index: 1;
+      animation: glowMove 10s ease-in-out infinite;
+    }
+    @keyframes glowMove {
+      0%, 100% { transform: translate(-50%, -50%) translate(20%, 20%); }
+      50% { transform: translate(-50%, -50%) translate(80%, 60%); }
+    }
+  </style>
 </head>
-<body class="bg-amber-50 min-h-screen">
+<body>
+
+  <!-- ══ DELIGHT 3D CANVAS LAYERS ══ -->
+  <canvas id="delight-canvas-3d"></canvas>
+  <canvas id="delight-particles"></canvas>
+  <canvas id="delight-spices"></canvas>
+  <div class="delight-vignette"></div>
+  <div class="delight-scanline"></div>
+  <div class="ambient-glow"></div>
+
+  <!-- ══ CUSTOM CURSOR ══ -->
+  <div class="delight-cursor" id="delight-cursor"></div>
+  <div class="delight-cursor-ring" id="delight-cursor-ring"></div>
+  <div class="delight-cursor-outer" id="delight-cursor-outer"></div>
+
+  <!-- ══ CINEMATIC LOADER ══ -->
+  <div id="delight-loader" class="delight-loader">
+    <div class="delight-loader-plate"></div>
+    <div class="delight-loader-text">PREPARING YOUR EXPERIENCE</div>
+    <div class="delight-loader-bar">
+      <div class="delight-loader-fill"></div>
+    </div>
+  </div>
+
   {% block content %}{% endblock %}
 
   <!-- Chatbot -->
@@ -45,6 +404,314 @@
     </div>
   </div>
 
-  <script src="/js/script.js"></script>
+  <!-- ✅ FIX 2: Use url_for for static JS -->
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+
+  <!-- ✅ FIX 3: Wrap the 3D engine code in a proper <script> tag -->
+  <script>
+    // ═══════════════════════════════════════════════════════════════════════
+    // ══ DELIGHT RESTAURANT — ULTIMATE 3D CINEMATIC ENGINE ══
+    // ═══════════════════════════════════════════════════════════════════════
+
+    // ── Three.js Scene ──
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({
+      canvas: document.getElementById('delight-canvas-3d'),
+      alpha: true,
+      antialias: true
+    });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    camera.position.z = 10;
+
+    // ── Volumetric Fog ──
+    scene.fog = new THREE.FogExp2(0xfffbeb, 0.015);
+
+    // ── Food-Themed Geometries ──
+    const foodGeometries = [
+      new THREE.SphereGeometry(0.4, 32, 32),
+      new THREE.ConeGeometry(0.3, 0.6, 8),
+      new THREE.TorusGeometry(0.3, 0.12, 16, 100),
+      new THREE.BoxGeometry(0.4, 0.4, 0.4),
+      new THREE.OctahedronGeometry(0.35, 0),
+      new THREE.IcosahedronGeometry(0.3, 1),
+      new THREE.CylinderGeometry(0.2, 0.2, 0.5, 16)
+    ];
+
+    // ── Materials ──
+    const emeraldWire = new THREE.MeshBasicMaterial({ color: 0x10b981, wireframe: true, transparent: true, opacity: 0.15 });
+    const amberWire = new THREE.MeshBasicMaterial({ color: 0xf59e0b, wireframe: true, transparent: true, opacity: 0.12 });
+    const emeraldSolid = new THREE.MeshPhysicalMaterial({ color: 0x065f46, metalness: 0.8, roughness: 0.2, transparent: true, opacity: 0.08, clearcoat: 1.0 });
+    const amberGlow = new THREE.MeshBasicMaterial({ color: 0xfbbf24, transparent: true, opacity: 0.1 });
+
+    // ── Food Crystal Field ──
+    const foodCrystals = [];
+    for (let i = 0; i < 25; i++) {
+      const geo = foodGeometries[Math.floor(Math.random() * foodGeometries.length)];
+      const mats = [emeraldWire, amberWire, emeraldSolid, amberGlow];
+      const mat = mats[Math.floor(Math.random() * mats.length)];
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.position.x = (Math.random() - 0.5) * 22;
+      mesh.position.y = (Math.random() - 0.5) * 18;
+      mesh.position.z = (Math.random() - 0.5) * 14 - 5;
+      mesh.userData = {
+        rotX: (Math.random() - 0.5) * 0.012,
+        rotY: (Math.random() - 0.5) * 0.012,
+        rotZ: (Math.random() - 0.5) * 0.008,
+        floatSpeed: Math.random() * 0.003 + 0.001,
+        floatOffset: Math.random() * Math.PI * 2,
+        originalY: mesh.position.y,
+        pulseSpeed: Math.random() * 0.02 + 0.01,
+        orbitSpeed: Math.random() * 0.3 + 0.1
+      };
+      foodCrystals.push(mesh);
+      scene.add(mesh);
+    }
+
+    // ── Spice Trails ──
+    const spiceTrails = [];
+    const trailMat = new THREE.LineBasicMaterial({ color: 0x10b981, transparent: true, opacity: 0.06 });
+
+    function updateTrails() {
+      spiceTrails.forEach(t => scene.remove(t));
+      spiceTrails.length = 0;
+      for (let i = 0; i < foodCrystals.length; i++) {
+        for (let j = i + 1; j < foodCrystals.length; j++) {
+          const dist = foodCrystals[i].position.distanceTo(foodCrystals[j].position);
+          if (dist < 7) {
+            const points = [foodCrystals[i].position.clone(), foodCrystals[j].position.clone()];
+            const geo = new THREE.BufferGeometry().setFromPoints(points);
+            const line = new THREE.Line(geo, trailMat);
+            spiceTrails.push(line);
+            scene.add(line);
+          }
+        }
+      }
+    }
+
+    // ── Steam Particles ──
+    const steamCount = 80;
+    const steamGeo = new THREE.BufferGeometry();
+    const steamPositions = new Float32Array(steamCount * 3);
+    const steamVelocities = [];
+    for (let i = 0; i < steamCount; i++) {
+      steamPositions[i * 3] = (Math.random() - 0.5) * 20;
+      steamPositions[i * 3 + 1] = (Math.random() - 0.5) * 16;
+      steamPositions[i * 3 + 2] = (Math.random() - 0.5) * 10;
+      steamVelocities.push({ x: (Math.random() - 0.5) * 0.015, y: Math.random() * 0.02 + 0.005, z: (Math.random() - 0.5) * 0.015 });
+    }
+    steamGeo.setAttribute('position', new THREE.BufferAttribute(steamPositions, 3));
+    const steamMat = new THREE.PointsMaterial({ color: 0xf59e0b, size: 0.1, transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending });
+    const steamSystem = new THREE.Points(steamGeo, steamMat);
+    scene.add(steamSystem);
+
+    // ── Lighting ──
+    scene.add(new THREE.AmbientLight(0xffffff, 0.3));
+    const emeraldLight = new THREE.PointLight(0x10b981, 1.5, 80);
+    emeraldLight.position.set(6, 6, 6);
+    scene.add(emeraldLight);
+    const amberLight = new THREE.PointLight(0xf59e0b, 1.2, 60);
+    amberLight.position.set(-6, -4, 5);
+    scene.add(amberLight);
+    const warmLight = new THREE.PointLight(0xffedd5, 0.8, 100);
+    warmLight.position.set(0, 0, -8);
+    scene.add(warmLight);
+
+    // ── Mouse Tracking ──
+    let mouseX = 0, mouseY = 0, targetMouseX = 0, targetMouseY = 0;
+    document.addEventListener('mousemove', (e) => {
+      targetMouseX = (e.clientX / window.innerWidth) * 2 - 1;
+      targetMouseY = -(e.clientY / window.innerHeight) * 2 + 1;
+    });
+
+    // ── Animation Loop ──
+    let time = 0, frameCount = 0;
+    function animate() {
+      requestAnimationFrame(animate);
+      time += 0.016;
+      frameCount++;
+      mouseX += (targetMouseX - mouseX) * 0.04;
+      mouseY += (targetMouseY - mouseY) * 0.04;
+
+      foodCrystals.forEach((crystal) => {
+        crystal.rotation.x += crystal.userData.rotX;
+        crystal.rotation.y += crystal.userData.rotY;
+        crystal.rotation.z += crystal.userData.rotZ;
+        crystal.position.y = crystal.userData.originalY + Math.sin(time * crystal.userData.floatSpeed * 100 + crystal.userData.floatOffset) * 0.6;
+        const orbitAngle = time * crystal.userData.orbitSpeed + crystal.userData.floatOffset;
+        crystal.position.x += Math.cos(orbitAngle) * 0.003;
+        crystal.position.z += Math.sin(orbitAngle) * 0.003;
+        const pulse = 1 + Math.sin(time * crystal.userData.pulseSpeed * 100) * 0.12;
+        crystal.scale.set(pulse, pulse, pulse);
+      });
+
+      if (frameCount % 15 === 0) updateTrails();
+
+      const sPos = steamGeo.attributes.position.array;
+      for (let i = 0; i < steamCount; i++) {
+        sPos[i * 3] += steamVelocities[i].x;
+        sPos[i * 3 + 1] += steamVelocities[i].y;
+        sPos[i * 3 + 2] += steamVelocities[i].z;
+        if (sPos[i * 3 + 1] > 10) {
+          sPos[i * 3 + 1] = -8;
+          sPos[i * 3] = (Math.random() - 0.5) * 20;
+          sPos[i * 3 + 2] = (Math.random() - 0.5) * 10;
+        }
+      }
+      steamGeo.attributes.position.needsUpdate = true;
+
+      camera.position.x += (mouseX * 1.2 - camera.position.x) * 0.025;
+      camera.position.y += (mouseY * 0.8 - camera.position.y) * 0.025;
+      camera.position.z = 10 + Math.sin(time * 0.3) * 0.8;
+      camera.lookAt(scene.position);
+
+      emeraldLight.position.x = 6 + Math.sin(time * 0.8) * 4;
+      emeraldLight.position.y = 6 + Math.cos(time * 0.6) * 3;
+      amberLight.position.x = -6 + Math.cos(time * 0.7) * 5;
+      amberLight.position.z = 5 + Math.sin(time * 0.5) * 3;
+
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    // ── 2D Spice Particle Canvas ──
+    const spiceCanvas = document.getElementById('delight-spices');
+    const spiceCtx = spiceCanvas.getContext('2d');
+    spiceCanvas.width = window.innerWidth;
+    spiceCanvas.height = window.innerHeight;
+    const spiceChars = ['🌿', '🌶️', '🧄', '🧅', '✦', '◆', '●', '∿'];
+    const spiceParticles = [];
+    for (let i = 0; i < 60; i++) {
+      spiceParticles.push({
+        x: Math.random() * spiceCanvas.width, y: Math.random() * spiceCanvas.height,
+        speedY: Math.random() * 0.8 + 0.2, speedX: (Math.random() - 0.5) * 0.4,
+        char: spiceChars[Math.floor(Math.random() * spiceChars.length)],
+        size: Math.random() * 16 + 10, opacity: Math.random() * 0.3 + 0.1,
+        rotation: Math.random() * Math.PI * 2, rotSpeed: (Math.random() - 0.5) * 0.02
+      });
+    }
+    function animateSpices() {
+      spiceCtx.clearRect(0, 0, spiceCanvas.width, spiceCanvas.height);
+      spiceParticles.forEach(p => {
+        p.y -= p.speedY; p.x += p.speedX; p.rotation += p.rotSpeed;
+        if (p.y < -30) { p.y = spiceCanvas.height + 30; p.x = Math.random() * spiceCanvas.width; }
+        spiceCtx.save();
+        spiceCtx.translate(p.x, p.y);
+        spiceCtx.rotate(p.rotation);
+        spiceCtx.globalAlpha = p.opacity;
+        spiceCtx.font = `${p.size}px serif`;
+        spiceCtx.fillText(p.char, 0, 0);
+        spiceCtx.restore();
+      });
+      requestAnimationFrame(animateSpices);
+    }
+    animateSpices();
+
+    // ── 2D Data Rain Canvas ──
+    const pCanvas = document.getElementById('delight-particles');
+    const pCtx = pCanvas.getContext('2d');
+    pCanvas.width = window.innerWidth;
+    pCanvas.height = window.innerHeight;
+    const rainChars = ['0', '1', '₹', '♨', '✦', '◆'];
+    const rainParticles = [];
+    for (let i = 0; i < 100; i++) {
+      rainParticles.push({
+        x: Math.random() * pCanvas.width, y: Math.random() * pCanvas.height,
+        speedY: Math.random() * 2 + 1,
+        char: rainChars[Math.floor(Math.random() * rainChars.length)],
+        size: Math.random() * 12 + 8, opacity: Math.random() * 0.2 + 0.05,
+        color: Math.random() > 0.5 ? '16, 185, 129' : '245, 158, 11'
+      });
+    }
+    function animateRain() {
+      pCtx.fillStyle = 'rgba(255, 251, 235, 0.05)';
+      pCtx.fillRect(0, 0, pCanvas.width, pCanvas.height);
+      rainParticles.forEach(p => {
+        p.y += p.speedY;
+        if (p.y > pCanvas.height) { p.y = -20; p.x = Math.random() * pCanvas.width; }
+        pCtx.fillStyle = `rgba(${p.color}, ${p.opacity})`;
+        pCtx.font = `${p.size}px monospace`;
+        pCtx.fillText(p.char, p.x, p.y);
+      });
+      requestAnimationFrame(animateRain);
+    }
+    animateRain();
+
+    // ── Custom Cursor ──
+    const cursor = document.getElementById('delight-cursor');
+    const cursorRing = document.getElementById('delight-cursor-ring');
+    const cursorOuter = document.getElementById('delight-cursor-outer');
+    document.addEventListener('mousemove', (e) => {
+      cursor.style.left = e.clientX + 'px'; cursor.style.top = e.clientY + 'px';
+      cursorRing.style.left = e.clientX + 'px'; cursorRing.style.top = e.clientY + 'px';
+      cursorOuter.style.left = e.clientX + 'px'; cursorOuter.style.top = e.clientY + 'px';
+    });
+    document.querySelectorAll('button, .menu-card, input, .p-4').forEach(el => {
+      el.addEventListener('mouseenter', () => {
+        cursorRing.style.transform = 'translate(-50%,-50%) scale(2)';
+        cursorRing.style.borderColor = 'rgba(16, 185, 129, 0.8)';
+        cursorOuter.style.transform = 'translate(-50%,-50%) scale(2.5)';
+        cursor.style.transform = 'translate(-50%,-50%) scale(1.5)';
+        cursor.style.background = '#34d399';
+      });
+      el.addEventListener('mouseleave', () => {
+        cursorRing.style.transform = 'translate(-50%,-50%) scale(1)';
+        cursorRing.style.borderColor = 'rgba(16, 185, 129, 0.4)';
+        cursorOuter.style.transform = 'translate(-50%,-50%) scale(1)';
+        cursor.style.transform = 'translate(-50%,-50%) scale(1)';
+        cursor.style.background = '#10b981';
+      });
+    });
+
+    // ── 3D Tilt on Menu Cards ──
+    function addTiltEffect() {
+      document.querySelectorAll('.menu-card, .p-4.border').forEach(card => {
+        card.addEventListener('mousemove', (e) => {
+          const rect = card.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          const rotateX = (y - rect.height / 2) / 15;
+          const rotateY = (rect.width / 2 - x) / 15;
+          card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateZ(30px) translateY(-8px)`;
+        });
+        card.addEventListener('mouseleave', () => { card.style.transform = ''; });
+      });
+    }
+    setTimeout(addTiltEffect, 500);
+    setTimeout(addTiltEffect, 1500);
+
+    // ── Loading Screen ──
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        const loader = document.getElementById('delight-loader');
+        loader.style.transition = 'opacity 1.5s cubic-bezier(0.23, 1, 0.32, 1)';
+        loader.style.opacity = '0';
+        setTimeout(() => loader.style.display = 'none', 1500);
+      }, 2800);
+    });
+
+    // ── Resize Handler ──
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      spiceCanvas.width = window.innerWidth;
+      spiceCanvas.height = window.innerHeight;
+      pCanvas.width = window.innerWidth;
+      pCanvas.height = window.innerHeight;
+    });
+
+    // ── Re-apply effects after dynamic renders ──
+    if (typeof renderMenu !== 'undefined') {
+      const _origRenderMenu = renderMenu;
+      renderMenu = function() { _origRenderMenu(); setTimeout(addTiltEffect, 100); };
+    }
+    if (typeof renderFilteredMenu !== 'undefined') {
+      const _origRenderFiltered = renderFilteredMenu;
+      renderFilteredMenu = function(data) { _origRenderFiltered(data); setTimeout(addTiltEffect, 100); };
+    }
+  </script>
+
 </body>
 </html>

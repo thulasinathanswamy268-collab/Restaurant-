@@ -1,3 +1,4 @@
+3d.html
 {% extends 'base.html' %}
 {% block content %}
 
@@ -6,7 +7,7 @@
   <!-- Header -->
   <header class="flex justify-between items-center mb-10">
     <div class="flex items-center gap-4">
-      <span class="text-6xl">🍛</span>
+      <span class="text-6xl food-emoji">🍛</span>
       <div>
         <h1 class="text-4xl font-bold text-emerald-700">Delight Restaurant</h1>
         <p class="text-emerald-600">Fresh & Delicious Food</p>
@@ -23,7 +24,7 @@
   <input id="search-input" 
          type="text" 
          placeholder="Search dishes... (e.g. biryani, dosa, paneer)" 
-         class="w-full p-5 text-lg rounded-3xl border border-gray-200 focus:border-emerald-500 focus:outline-none mb-10">
+         class="w-full p-5 text-lg rounded-3xl border border-gray-200 focus:border-emerald-500 focus:outline-none mb-10" id="search-input">
 
   <!-- Categories -->
   <div id="categories" class="flex gap-3 overflow-x-auto pb-6 mb-8"></div>
@@ -81,7 +82,7 @@
     menuData.forEach(item => {
       const imageHtml = item.image ? `<img src="/images/${item.image}" alt="${item.name}" class="w-full h-32 object-cover rounded-lg mb-3">` : '';
       const card = `
-        <div class="p-4 border rounded-xl shadow">
+        <div class="p-4 border rounded-xl shadow menu-card">
           ${imageHtml}
           <h3 class="text-lg font-bold">${item.name}</h3>
           <p class="text-gray-600">₹${item.price}</p>
@@ -183,7 +184,7 @@
     filteredData.forEach(item => {
       const imageHtml = item.image ? `<img src="/static/images/${item.image}" alt="${item.name}" class="w-full h-32 object-cover rounded-lg mb-3">` : '';
       const card = `
-        <div class="p-4 border rounded-xl shadow">
+        <div class="p-4 border rounded-xl shadow menu-card">
           ${imageHtml}
           <h3 class="text-lg font-bold">${item.name}</h3>
           <p class="text-gray-600">₹${item.price}</p>
